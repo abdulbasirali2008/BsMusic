@@ -42,6 +42,13 @@ object AppUpdateChecker {
 
     private const val CACHE_SUBDIR = "updates"
 
+    /**
+     * BsMusic is a personal build: its releases are tagged build-N, not
+     * versions, and the original BitChord releases would replace it. So the
+     * online update check is switched off.
+     */
+    private const val UPDATE_CHECK_ENABLED = false
+
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/kushagrasinghx/BitChord/releases/latest"
 
@@ -67,6 +74,7 @@ object AppUpdateChecker {
 
     suspend fun check() = withContext(Dispatchers.IO) {
         runCatching {
+            if (!UPDATE_CHECK_ENABLED) return@runCatching
             val request = Request.Builder().url(LATEST_RELEASE_URL).build()
             val body = Http.client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) null else response.body?.string()
