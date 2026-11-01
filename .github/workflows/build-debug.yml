@@ -1,5 +1,7 @@
 name: Build Debug APK
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +16,10 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew && ./gradlew :app:assembleDevDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bsmusic-apk
-          path: app/build/outputs/apk/**/*.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          cp "$APK" BsMusic.apk
+          gh release create "build-${{ github.run_number }}" BsMusic.apk --title "BsMusic build ${{ github.run_number }}" --notes "Debug build"
